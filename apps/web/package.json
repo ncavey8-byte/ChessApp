@@ -1,0 +1,32 @@
+{
+  "name": "@acc/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "copy-engine": "node scripts/copy-engine.mjs",
+    "predev": "node scripts/copy-engine.mjs",
+    "dev": "next dev",
+    "prebuild": "node scripts/copy-engine.mjs",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@acc/chess-core": "workspace:*",
+    "next": "16.4.0",
+    "react": "^19.3.0",
+    "react-chessboard": "5.12.1",
+    "react-dom": "^19.3.0",
+    "stockfish": "19.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.3"
+  }
+}
