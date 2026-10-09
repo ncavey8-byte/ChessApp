@@ -1,0 +1,9 @@
+[Event "Fixture game"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish skill 4"]
+[Black "Stockfish skill 4"]
+[Result "*"]
+
+1. e4 e6 2. Nf3 a5 3. c4 d5 4. exd5 exd5 5. Qa4+ Bd7 6. Qd1 Bc6 7. Qe2+ Ne7 8. Na3 dxc4 9. Qe3 Bd5 10. d3 Ra6 11. Nd4 c5 12. Ndb5 c3 13. Kd1 c2+ 14. Kd2 Nc6 15. Kxc2 Nd4+ 16. Kb1 Re6 17. Qf4 Re1 18. Qd2 Re6 19. Qg5 Qd7 20. Qf4 Nxb5 21. Qb8+ Nc8 22. Nxb5 Bd6 23. Qa8 Bc7 24. Bd2 Bb6 25. Qb8 O-O 26. a4 Ne7 27. Qg3 Rg6 28. Qf4 Bc6 29. Ra3 Rf6 30. Qg3 Nd5 31. d4 h6 32. Bd3 cxd4 33. Rb3 Nc7 34. Bf4 Ne6 35. Bb8 Nc5 36. Nxd4 Qxd4 37. Rd1 Nxd3 38. Rbxd3 Be4 39. b3 Bxd3+ 40. Rxd3 Qe4 *

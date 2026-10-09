@@ -6,8 +6,8 @@ export default function HomePage() {
       <section className="hero">
         <h1>Train smarter. Play better chess.</h1>
         <p className="lead">
-          Play complete games against Stockfish at a level that suits you. Game analysis, plain-language coaching and
-          personalised practice are on the way.
+          Play complete games against Stockfish at a level that suits you, then review every move with engine analysis.
+          Plain-language coaching and personalised practice are on the way.
         </p>
         <Link href="/play" className="btn btn-primary btn-lg">
           Play the computer
@@ -22,7 +22,7 @@ export default function HomePage() {
         <div className="feature">
           <h2>Analyse</h2>
           <p>Move-by-move engine review that highlights the moments that really mattered.</p>
-          <span className="badge">Coming soon</span>
+          <span className="badge badge-live">Available</span>
         </div>
         <div className="feature">
           <h2>Coach & practise</h2>

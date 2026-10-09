@@ -2,7 +2,7 @@
 
 A chess-training platform for improving players: play the computer, get feedback on finished games, and practise exercises built from your own mistakes.
 
-**Status: Milestone 1 of 6.** The current build lets you play complete games against Stockfish in the browser. Game analysis, coaching, accounts, personalised practice and the mobile app are not built yet. See [docs/PLAN.md](docs/PLAN.md) for the architecture and roadmap.
+**Status: Milestone 2 of 6.** You can play complete games against Stockfish, resume them after a reload, and analyse finished or imported games in the browser. Coaching, accounts, personalised practice and the mobile app are not built yet. See [docs/PLAN.md](docs/PLAN.md) for the architecture and roadmap.
 
 ## What works (Milestone 1)
 
@@ -13,6 +13,15 @@ A chess-training platform for improving players: play the computer, get feedback
 - Undo (takes back your move and the engine's reply), resign, flip board, new game, copy PGN
 - Typed move entry (SAN such as `Nf3` or UCI such as `g1f3`) for keyboard users
 - Engine loading, timeout and crash states with a restart button; every engine move is checked for legality before it is played
+
+## What works (Milestone 2)
+
+- The in-progress game is saved in the browser (localStorage) after every move and resumed when you come back to `/play`
+- Finished games are kept in a local library at `/analysis` (latest 30); PGN import (paste) and PGN download
+- Engine analysis of every position (Stockfish, full strength, Quick or Standard depth) in a Web Worker, with progress and cancel
+- Each move is classified by how much it lowered the mover's winning chances (Lichess-style thresholds): inaccuracy, mistake, blunder, missed win
+- Analysis view: evaluation graph, annotated move list, best-move arrow, per-side summary, keyboard navigation (←/→/Home/End), settings disclaimer
+- Analysis results are cached with the game and discarded automatically if they don't match its moves
 
 ## Layout
 
@@ -51,9 +60,10 @@ CI runs all of these on every push and pull request (`.github/workflows/ci.yml`)
 
 ## Known limitations
 
-- Games are not saved yet. The game record format (start FEN + move list) supports resume and is tested, but storage arrives in Milestone 2/3. Reloading the page loses the game.
+- Games are stored only in this browser. Clearing site data deletes them, and they don't sync between devices until accounts arrive (Milestone 3).
+- Analysis uses a short search in the browser engine, so move labels are estimates and can be wrong in complicated positions.
 - Difficulty levels use Stockfish's Skill Level and short search times. They are not calibrated to real ratings.
-- No analysis, coaching, accounts, practice or dashboard yet.
+- No coaching explanations, accounts, practice or dashboard yet.
 - Stockfish is GPL-3.0. See the `/licenses` page and docs/PLAN.md for what that means for distribution, especially on iOS.
 
 ## Licences

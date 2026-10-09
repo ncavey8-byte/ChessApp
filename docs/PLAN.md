@@ -75,7 +75,7 @@ RLS: every table has `user_id = auth.uid()` policies for select/insert/update/de
 
 ## 6. Milestones & acceptance criteria
 
-**M1 — Foundation & play vs computer (this milestone)**
+**M1 — Foundation & play vs computer (done)**
 - Monorepo, shared `chess-core`, Next.js app, lint/typecheck/test/CI.
 - Interactive board with drag and click-to-move, legal-target hints, last-move and check highlights.
 - All rules handled via chess.js: castling, en passant, promotion (piece picker), checkmate, stalemate, threefold, fifty-move, insufficient material.
@@ -83,7 +83,7 @@ RLS: every table has `user_id = auth.uid()` policies for select/insert/update/de
 - Undo (takes back your move and the engine reply), restart, resign, flip board, typed-move input, optional start-from-FEN.
 - Acceptance: a user can finish a full game against the engine. The Playwright E2E test covers both a user-delivered mate and an engine-delivered mate. A Node integration test plays complete games against real Stockfish.
 
-**M2 — Save/resume & game analysis**
+**M2 — Save/resume & game analysis (done)**
 - Persist the in-progress game locally (resume after refresh). Export/import PGN.
 - Analysis pipeline in `chess-core/analysis`: per-ply evals and win-probability-loss classification (inaccuracy/mistake/blunder/missed win). Thresholds ignore harmless changes.
 - Analysis view: eval graph, move list with annotations, best-move arrows, a settings disclaimer.

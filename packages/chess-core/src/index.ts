@@ -4,3 +4,8 @@ export * from './engine/types';
 export * from './engine/uci';
 export * from './engine/uci-engine';
 export * from './engine/difficulty';
+export * from './analysis/evaluation';
+export * from './analysis/classify';
+export * from './analysis/analyze-game';
+export * from './persistence/saved-game';
+export * from './persistence/repository';
