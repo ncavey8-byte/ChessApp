@@ -2,23 +2,28 @@
 
 import {
   STARTING_FEN,
+  archiveFromSession,
   canUndo,
   createSession,
   isEnginesTurn,
   isPlayersTurn,
+  restoreSession,
   sessionPgn,
+  toSavedSession,
   type Color,
   type GameSession,
   type NewSessionOptions,
   type MoveInput as Move,
   type PromotionPiece,
 } from '@acc/chess-core';
-import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { Chessboard, type ChessboardOptions } from 'react-chessboard';
 import { useEngine } from '@/lib/engine/use-engine';
 import { computeSquareStyles } from '@/lib/game/board-styles';
 import { COLOR_NAMES, describeResult, opponentLabel } from '@/lib/game/labels';
 import { useGameController } from '@/lib/game/use-game-controller';
+import { downloadText, getGameRepository, newGameId } from '@/lib/storage/game-repository';
 import { MoveInput } from './MoveInput';
 import { MoveList } from './MoveList';
 import { NewGamePanel, type NewGameSettings } from './NewGamePanel';
@@ -39,6 +44,17 @@ const PREVIEW_POSITION = (() => {
   return s.value.position;
 })();
 
+interface GameMeta {
+  id: string;
+  createdAt: string;
+}
+
+const newMeta = (): GameMeta => ({ id: newGameId(), createdAt: new Date().toISOString() });
+
+function pgnDate(): string {
+  return new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+}
+
 function initialSession(start: NewSessionOptions | null): GameSession | null {
   if (!start) return null;
   const created = createSession(start);
@@ -51,6 +67,10 @@ export function PlayScreen({ initial }: { initial: InitialSetup }) {
   const [firstSession] = useState(() => initialSession(initial.start));
   const { session, notice, dispatch } = useGameController(engine, reportFailure, firstSession);
 
+  const [meta, setMeta] = useState<GameMeta | null>(() => (firstSession ? newMeta() : null));
+  // When the URL does not start a game, look for a saved in-progress game first.
+  const [restoring, setRestoring] = useState(firstSession === null);
+  const [resumed, setResumed] = useState(false);
   const [setupOpen, setSetupOpen] = useState(firstSession === null);
   const [setupError, setSetupError] = useState<string | null>(initial.error);
   const [settings, setSettings] = useState<NewGameSettings>(initial.settings);
@@ -69,6 +89,39 @@ export function PlayScreen({ initial }: { initial: InitialSetup }) {
   const thinking = Boolean(session) && isEnginesTurn(session!) && engineState.status === 'ready';
   const orientation: 'white' | 'black' = (playerColor === 'w') !== flipped ? 'white' : 'black';
 
+  useEffect(() => {
+    if (!restoring) return;
+    let cancelled = false;
+    getGameRepository()
+      .loadCurrent()
+      .then((saved) => {
+        if (cancelled || !saved) return;
+        const restored = restoreSession(saved);
+        if (!restored.ok || restored.value.result) return;
+        dispatch({ type: 'start', session: restored.value });
+        setMeta({ id: saved.id, createdAt: saved.createdAt });
+        setSettings((s) => ({ ...s, color: saved.playerColor, level: saved.difficulty }));
+        setSetupOpen(false);
+        setResumed(true);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setRestoring(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [restoring, dispatch]);
+
+  useEffect(() => {
+    if (!session || !meta || restoring) return;
+    const repo = getGameRepository();
+    const save = session.result
+      ? repo.saveArchived(archiveFromSession(session, meta.id)).then(() => repo.clearCurrent())
+      : repo.saveCurrent(toSavedSession(session, meta.id, meta.createdAt));
+    save.catch(() => dispatch({ type: 'notice', message: 'Could not save this game in your browser.' }));
+  }, [session, meta, restoring, dispatch]);
+
   const squareStyles = useMemo(
     () => computeSquareStyles({ position, selected, playerColor }),
     [position, selected, playerColor],
@@ -86,6 +139,8 @@ export function PlayScreen({ initial }: { initial: InitialSetup }) {
       return;
     }
     setSettings(next);
+    setMeta(newMeta());
+    setResumed(false);
     setSetupError(null);
     setSetupOpen(false);
     setFlipped(false);
@@ -180,7 +235,11 @@ export function PlayScreen({ initial }: { initial: InitialSetup }) {
           </div>
         )}
 
-        {setupOpen ? (
+        {restoring ? (
+          <div className="panel" role="status">
+            <p className="muted">Checking for a saved game…</p>
+          </div>
+        ) : setupOpen ? (
           <NewGamePanel
             defaults={settings}
             error={setupError}
@@ -194,12 +253,18 @@ export function PlayScreen({ initial }: { initial: InitialSetup }) {
                 <div className={`result-banner${result.title === 'Draw' ? ' is-draw' : session.result?.winner === playerColor ? ' is-win' : ' is-loss'}`} data-testid="result-banner">
                   <h2>{result.title}</h2>
                   <p>{result.detail}</p>
+                  {meta && (
+                    <Link href={`/analysis?game=${meta.id}`} className="btn btn-primary">
+                      Analyse this game
+                    </Link>
+                  )}
                 </div>
               ) : null}
 
               <p className="status" data-testid="game-status" role="status" aria-live="polite">
                 {status}
               </p>
+              {resumed && ply > 0 && !session.result && <p className="muted small">Resumed your saved game.</p>}
               {notice && (
                 <p className="field-error" role="alert">
                   {notice}
@@ -244,7 +309,7 @@ export function PlayScreen({ initial }: { initial: InitialSetup }) {
                   className="btn btn-secondary"
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText(sessionPgn(session, { Date: new Date().toISOString().slice(0, 10).replace(/-/g, '.') }));
+                      await navigator.clipboard.writeText(sessionPgn(session, { Date: pgnDate() }));
                       setCopied(true);
                       setTimeout(() => setCopied(false), 1500);
                     } catch {
@@ -253,6 +318,13 @@ export function PlayScreen({ initial }: { initial: InitialSetup }) {
                   }}
                 >
                   {copied ? 'Copied!' : 'Copy PGN'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => downloadText(`chess-game-${pgnDate().replace(/\./g, '-')}.pgn`, sessionPgn(session, { Date: pgnDate() }))}
+                >
+                  Download PGN
                 </button>
               </div>
               <button type="button" className="btn btn-primary btn-block" onClick={() => setSetupOpen(true)}>

@@ -248,3 +248,28 @@ export class ChessPosition {
     return chess.pgn();
   }
 }
+
+export interface ParsedPgn {
+  readonly record: GameRecord;
+  readonly headers: Readonly<Record<string, string>>;
+}
+
+export const MAX_PGN_LENGTH = 100_000;
+
+/** Parses a single-game PGN into a GameRecord. All moves are re-validated by replaying them. */
+export function parsePgn(pgn: string): Result<ParsedPgn> {
+  const text = pgn.trim();
+  if (!text) return { ok: false, error: 'Paste a PGN to import' };
+  if (text.length > MAX_PGN_LENGTH) return { ok: false, error: `PGN is too long (limit ${MAX_PGN_LENGTH.toLocaleString('en')} characters)` };
+  const chess = new Chess();
+  try {
+    chess.loadPgn(text);
+  } catch (error) {
+    return { ok: false, error: `Could not read the PGN: ${error instanceof Error ? error.message : 'invalid format'}` };
+  }
+  const moves = chess.history({ verbose: true });
+  if (moves.length === 0) return { ok: false, error: 'The PGN contains no moves' };
+  const position = ChessPosition.fromRecord({ startFen: moves[0]!.before, moves: moves.map((m) => m.lan) });
+  if (!position.ok) return position;
+  return { ok: true, value: { record: position.value.record, headers: chess.getHeaders() } };
+}
